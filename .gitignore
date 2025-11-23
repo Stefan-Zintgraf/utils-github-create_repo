@@ -40,3 +40,6 @@ Thumbs.db
 test_folder_structure/
 p*_s*/
 
+
+# GitHub token (security)
+github_token.txt
