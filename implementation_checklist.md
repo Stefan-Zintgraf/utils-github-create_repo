@@ -46,7 +46,13 @@ python update_checklist.py <phase> <step>
 2. Run the test script and verify success
 3. Copy all step-related files to the appropriate subfolder (e.g., `p3_s3.2/`)
 4. Checkboxes are automatically updated by test scripts (see `update_checklist.py`)
-5. Verify the checkbox is checked in the progress summary below
+5. **Update and push to git repository:**
+   - Add files: `git add .` (step subfolders `p*_s*/` are automatically excluded via `.gitignore`)
+   - Commit: `git commit -m "Step X.Y: [Step description]"`
+   - Push: `git push origin main`
+6. Verify the checkbox is checked in the progress summary below
+
+**Important:** Step subfolders (`p*_s*/`) are in `.gitignore` and must never be committed to the repository. They are for local step storage only.
 
 ## Implementation Progress Summary
 

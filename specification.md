@@ -562,6 +562,36 @@ class MainWindow(customtkinter.CTk):
 - Scheduled backups
 - Repository statistics
 
+## Development Workflow and Git Management
+
+### Step Completion Process
+
+After each implementation step is completed:
+
+1. **Complete Implementation:**
+   - Implement the step according to the checklist
+   - Run the test script and verify success
+
+2. **Store Step Files:**
+   - Copy all step-related files to subfolder `p{phase}_s{step}/` (e.g., `p1_s1.1/`)
+   - Maintain directory structure within the subfolder
+
+3. **Update Git Repository:**
+   - Add all modified/new project files to git: `git add .`
+   - **Important:** Step subfolders (`p*_s*/`) are automatically excluded via `.gitignore` and must never be committed
+   - Commit with descriptive message: `git commit -m "Step X.Y: [Step description]"`
+   - Push to remote: `git push origin main`
+
+4. **Update Checklist:**
+   - Checkboxes are automatically updated by test scripts
+
+### Git Repository Rules
+
+- **Step subfolders excluded:** All `p*_s*/` folders are in `.gitignore` and must never be added to the repository
+- **Automatic commits:** Each completed step should result in a git commit and push
+- **Commit messages:** Use format "Step X.Y: [description]" for clarity
+- **Repository sync:** Keep the remote repository up-to-date after each step
+
 ## Development Phases
 
 ### Phase 1: Core Functionality (MVP)
