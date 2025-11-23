@@ -29,6 +29,8 @@ python update_checklist.py <phase> <step>
 
 **After successfully implementing and testing each step, all files, folders, and related artifacts must be stored in a subfolder named with the pattern `p{phase}_s{step}`.**
 
+**Every checklist step must also include the creation of a runnable `test_step_X_Y.py` script that verifies that step’s functionality, exercises `update_checklist.py`, and confirms the step’s checkbox when executed. Writing that script is part of the step’s implementation work.**
+
 **Examples:**
 - Phase 1, Step 1.1 → `p1_s1.1/`
 - Phase 2, Step 2.3 → `p2_s2.3/`
@@ -42,15 +44,18 @@ python update_checklist.py <phase> <step>
 - Documentation updates
 
 **Storage Process:**
-1. Complete the step implementation
-2. Run the test script and verify success
-3. Copy all step-related files to the appropriate subfolder (e.g., `p3_s3.2/`)
-4. Checkboxes are automatically updated by test scripts (see `update_checklist.py`)
-5. **Update and push to git repository:**
+1. Complete the step implementation (automation agent, e.g., Codex, will orchestrate all required edits and script generation)
+2. Run the test script and verify success (automation agent runs each `test_step_X_Y.py`)
+3. Re-run every `test_step_X_Y.py` script introduced so far, including previous steps, to ensure no regressions are introduced; adjust older scripts as needed to reflect intentional interfaces and requirements
+4. Copy all step-related files to the appropriate subfolder (e.g., `p3_s3.2/`) and gather logs (automation agent automates this archival)
+5. Checkboxes are automatically updated by test scripts (see `update_checklist.py`)
+6. **Update and push to git repository:** (automation agent executes `git add`, commit, and push once validation passes)
    - Add files: `git add .` (step subfolders `p*_s*/` are automatically excluded via `.gitignore`)
    - Commit: `git commit -m "Step X.Y: [Step description]"`
    - Push: `git push origin main`
-6. Verify the checkbox is checked in the progress summary below
+7. Verify the checkbox is checked in the progress summary below
+
+**Automation Note:** An automation agent (e.g., Codex) is responsible for running the entire workflow described above—test execution, regression checks, artifact archiving, checklist updates, and git pushes—without requiring any direct input from you unless a specific decision is needed (e.g., choosing between conflicting implementations). The agent should not stop mid-step or request confirmation unless a course of action cannot be determined automatically. Unless explicitly instructed to halt before a phase, the automation agent completes the full lifecycle for every step so nothing is left half-finished.
 
 **Important:** Step subfolders (`p*_s*/`) are in `.gitignore` and must never be committed to the repository. They are for local step storage only.
 
@@ -64,7 +69,7 @@ python update_checklist.py <phase> <step>
 
 ### Phase 1: Project Setup
 - [x] Step 1.1: Create Project Structure
-- [ ] Step 1.2: Create Requirements File
+- [x] Step 1.2: Create Requirements File
 - [ ] Step 1.3: Create Logging Directory and Utility
 
 ### Phase 2: Core Services

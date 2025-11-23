@@ -521,6 +521,9 @@ class MainWindow(customtkinter.CTk):
 - GitHub service methods
 - Git service methods
 - Error handling
+**Each phase/step described in the implementation checklist must include the creation of a corresponding `test_step_X_Y.py` script as part of that step’s implementation work; the script should verify the step-specific requirements, exercise `update_checklist.py`, and fully automate the validation without additional manual input.** These scripts should live at the repository root, follow the naming convention `test_step_{phase}_{step}.py`, and be runnable so automation can sequence through them.
+
+After completing any step, an automation agent (e.g., Codex) executes the new test script **and** every previously introduced `test_step_{phase}_{step}.py` script; regression checks are automated, older scripts are adjusted as needed, outputs are logged per the logging guidance, and artifacts are archived before the step concludes. The expectation is that the automation agent runs the full lifecycle without requiring any manual triggers unless a specific implementation choice or confirmation is required, in which case the agent requests guidance before continuing. Unless explicitly instructed to halt before a phase, the automation agent carries the step through the entire lifecycle so no part of a step remains incomplete.
 
 ### Integration Tests
 - End-to-end repository creation
