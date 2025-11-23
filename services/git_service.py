@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import stat
 from pathlib import Path
 
 
@@ -17,8 +18,33 @@ class GitService:
         raise NotImplementedError("initialize_repo is not implemented yet.")
 
     def create_gitkeep_files(self) -> int:
-        """Create .gitkeep files in empty folders - implemented in Step 2.3."""
-        raise NotImplementedError("create_gitkeep_files is not implemented yet.")
+        """Create .gitkeep files in empty folders."""
+        created = 0
+        for root, _, files in os.walk(self.repo_path):
+            current = Path(root)
+            if ".git" in current.parts:
+                continue
+
+            if files:
+                continue
+
+            gitkeep_path = current / ".gitkeep"
+            if gitkeep_path.exists():
+                continue
+
+            try:
+                gitkeep_path.write_text("", encoding="utf-8")
+                created += 1
+            except OSError:
+                # Attempt to adjust permissions and retry once
+                current.chmod(current.stat().st_mode | stat.S_IWUSR)
+                try:
+                    gitkeep_path.write_text("", encoding="utf-8")
+                    created += 1
+                except OSError:
+                    continue
+
+        return created
 
     def stage_all_files(self) -> tuple[int, int]:
         """Stage all files - implemented in Step 2.4."""
