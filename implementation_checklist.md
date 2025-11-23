@@ -80,7 +80,7 @@ python update_checklist.py <phase> <step>
 - [x] Step 2.5: Create GitHub Service
 
 ### Phase 3: User Interface
-- [ ] Step 3.1: Create Main Window Structure
+- [x] Step 3.1: Create Main Window Structure
 - [ ] Step 3.2: Implement UI Event Handlers
 - [ ] Step 3.3: Implement Background Threading
 
