@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import queue
+import threading
+import time
+
 import customtkinter as ctk
 
 
@@ -16,8 +20,13 @@ class MainWindow(ctk.CTk):
         self.folder_path_var = ctk.StringVar()
         self.status_history: list[tuple[str, bool]] = []
         self.progress_value = 0
+        self._operation_thread: threading.Thread | None = None
+        self._operation_complete_event = threading.Event()
+        self._status_queue: queue.Queue[tuple[str, bool]] = queue.Queue()
+        self._progress_queue: queue.Queue[int] = queue.Queue()
 
         self._setup_ui()
+        self.after(50, self._process_queue)
 
     def _setup_ui(self) -> None:
         """Create UI components."""
@@ -63,11 +72,15 @@ class MainWindow(ctk.CTk):
 
     def on_create_clicked(self) -> None:
         """Handle create button click."""
-        self.update_status("Create operation started.", False)
+        if self._operation_thread and self._operation_thread.is_alive():
+            self.update_status("A creation task is already running.", error=True)
+            return
+
+        self._operation_complete_event.clear()
+        self.update_status("Create operation started.")
         self.update_progress(0)
-        self.update_status("Create operation in progress...")
-        self.update_progress(100)
-        self.update_status("Create operation completed.")
+        self._operation_thread = threading.Thread(target=self._perform_create_operations, daemon=True)
+        self._operation_thread.start()
 
     def on_clear_clicked(self) -> None:
         """Reset all form fields."""
@@ -80,8 +93,11 @@ class MainWindow(ctk.CTk):
         self.update_status("Fields cleared.")
 
     def update_status(self, message: str, error: bool = False) -> None:
-        """Append a message to status log."""
+        """Append a message to the status log."""
         self.status_history.append((message, error))
+        self._append_status(message, error)
+
+    def _append_status(self, message: str, error: bool) -> None:
         self.status_text.configure(state="normal")
         prefix = "[ERROR]" if error else "[INFO]"
         self.status_text.insert("end", f"{prefix} {message}\n")
@@ -98,3 +114,38 @@ class MainWindow(ctk.CTk):
         normalized = max(0, min(100, value))
         self.progress_value = normalized
         self.progress_bar.set(normalized / 100)
+
+    def _perform_create_operations(self) -> None:
+        steps = [
+            (20, "Scanning folders..."),
+            (40, "Creating .gitkeep files..."),
+            (60, "Staging files..."),
+            (80, "Committing changes..."),
+            (95, "Configuring remote..."),
+        ]
+        for value, message in steps:
+            self._enqueue_status(message)
+            self._enqueue_progress(value)
+            time.sleep(0.05)
+
+        self._enqueue_status("Background create operation completed.")
+        self._enqueue_progress(100)
+        self._operation_complete_event.set()
+        self._operation_thread = None
+
+    def _enqueue_status(self, message: str, error: bool = False) -> None:
+        self._status_queue.put((message, error))
+
+    def _enqueue_progress(self, value: int | None) -> None:
+        self._progress_queue.put(value if value is not None else 0)
+
+    def _process_queue(self) -> None:
+        while not self._status_queue.empty():
+            message, error = self._status_queue.get()
+            self.update_status(message, error)
+
+        while not self._progress_queue.empty():
+            value = self._progress_queue.get()
+            self.update_progress(value)
+
+        self.after(50, self._process_queue)
