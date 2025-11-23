@@ -8,6 +8,8 @@ import time
 
 import customtkinter as ctk
 
+from utils.logger import configure_logger
+
 
 class MainWindow(ctk.CTk):
     """Main application window."""
@@ -24,6 +26,7 @@ class MainWindow(ctk.CTk):
         self._operation_complete_event = threading.Event()
         self._status_queue: queue.Queue[tuple[str, bool]] = queue.Queue()
         self._progress_queue: queue.Queue[int] = queue.Queue()
+        self.logger = configure_logger("ui_main_window")
 
         self._setup_ui()
         self.after(50, self._process_queue)
@@ -79,6 +82,7 @@ class MainWindow(ctk.CTk):
         self._operation_complete_event.clear()
         self.update_status("Create operation started.")
         self.update_progress(0)
+        self.logger.info("Starting background create operations")
         self._operation_thread = threading.Thread(target=self._perform_create_operations, daemon=True)
         self._operation_thread.start()
 
@@ -123,15 +127,21 @@ class MainWindow(ctk.CTk):
             (80, "Committing changes..."),
             (95, "Configuring remote..."),
         ]
-        for value, message in steps:
-            self._enqueue_status(message)
-            self._enqueue_progress(value)
-            time.sleep(0.05)
+        try:
+            for value, message in steps:
+                self._enqueue_status(message)
+                self._enqueue_progress(value)
+                time.sleep(0.05)
 
-        self._enqueue_status("Background create operation completed.")
-        self._enqueue_progress(100)
-        self._operation_complete_event.set()
-        self._operation_thread = None
+            self._enqueue_status("Background create operation completed.")
+            self._enqueue_progress(100)
+        except Exception:
+            self.logger.exception("Background create operation failed")
+            self._enqueue_status("Background create operation failed.", error=True)
+            self._enqueue_progress(0)
+        finally:
+            self._operation_complete_event.set()
+            self._operation_thread = None
 
     def _enqueue_status(self, message: str, error: bool = False) -> None:
         self._status_queue.put((message, error))
