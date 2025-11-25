@@ -1,69 +1,135 @@
-"""GitHub API operations for the GitHub Repository Creator."""
+"""
+GitHub service for GitHub Repository Creator.
 
-from __future__ import annotations
+Handles GitHub API operations including repository creation and token validation.
+"""
 
 from typing import Optional
 
-from github import Github
-from github.GithubException import GithubException, UnknownObjectException
-
-from utils.logger import configure_logger
-
-
-logger = configure_logger("github_service")
+try:
+    from github import Github
+    from github.GithubException import GithubException
+    PYGITHUB_AVAILABLE = True
+except ImportError:
+    PYGITHUB_AVAILABLE = False
+    Github = None
+    GithubException = Exception
 
 
 class GitHubService:
-    """Wraps PyGithub interactions."""
-
+    """Service for executing GitHub API operations."""
+    
     def __init__(self, token: str):
-        self.token = token.strip()
-        self.client: Optional[Github] = Github(self.token) if self.token else None
-
-    def validate_token(self, token: str) -> bool:
-        """Validate the provided GitHub token by fetching the current user."""
-        if not token or not self.client:
-            logger.warning("Token validation skipped; missing token or client.")
+        """
+        Initialize GitHubService with authentication token.
+        
+        Args:
+            token: GitHub Personal Access Token
+        """
+        self.token = token
+        self.github: Optional[Github] = None
+        
+        if PYGITHUB_AVAILABLE:
+            try:
+                self.github = Github(token)
+            except Exception:
+                pass
+    
+    def validate_token(self, token: Optional[str] = None) -> bool:
+        """
+        Validate GitHub Personal Access Token.
+        
+        Args:
+            token: Token to validate (uses instance token if None)
+            
+        Returns:
+            True if token is valid, False otherwise
+        """
+        test_token = token or self.token
+        if not test_token:
             return False
-
-        try:
-            user = self.client.get_user()
-            return bool(user.login)
-        except GithubException as exc:
-            logger.error("Token validation failed: %s", exc)
+        
+        if not PYGITHUB_AVAILABLE:
             return False
-
-    def create_repository(self, name: str, private: bool, description: str) -> str:
-        """Create a repository and return its clone URL."""
-        if not self.client:
-            logger.error("Cannot create repository; missing GitHub client.")
-            raise GithubException(0, "Missing token", {})
-
+        
         try:
-            user = self.client.get_user()
-            repository = user.create_repo(
+            github = Github(test_token)
+            # Try to get authenticated user
+            user = github.get_user()
+            # If we can get the user, token is valid
+            _ = user.login
+            return True
+        except Exception:
+            return False
+    
+    def create_repository(
+        self,
+        name: str,
+        private: bool = True,
+        description: str = ""
+    ) -> str:
+        """
+        Create a new GitHub repository.
+        
+        Args:
+            name: Repository name
+            private: Whether repository should be private (default: True)
+            description: Repository description (optional)
+            
+        Returns:
+            Repository URL (HTTPS)
+            
+        Raises:
+            Exception: If repository creation fails
+        """
+        if not PYGITHUB_AVAILABLE or not self.github:
+            raise Exception("PyGithub library not available")
+        
+        try:
+            user = self.github.get_user()
+            repo = user.create_repo(
                 name=name,
                 private=private,
                 description=description,
-                auto_init=False,
+                auto_init=False,  # Don't initialize with README
+                gitignore_template=None,
+                license_template=None
             )
-            return repository.clone_url
-        except GithubException as exc:
-            logger.error("Repository creation failed: %s", exc)
-            raise
-
+            return repo.clone_url
+        except GithubException as e:
+            if e.status == 422:
+                # Repository might already exist
+                raise Exception(f"Repository '{name}' already exists or name is invalid")
+            elif e.status == 401:
+                raise Exception("Authentication failed. Please check your token.")
+            else:
+                raise Exception(f"Failed to create repository: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Failed to create repository: {str(e)}")
+    
     def check_repository_exists(self, name: str) -> bool:
-        """Return True if the repository exists for the authenticated user."""
-        if not self.client:
-            logger.warning("Repository existence check skipped; missing client.")
+        """
+        Check if a repository with the given name already exists.
+        
+        Args:
+            name: Repository name to check
+            
+        Returns:
+            True if repository exists, False otherwise
+        """
+        if not PYGITHUB_AVAILABLE or not self.github:
+            return False
+        
+        try:
+            user = self.github.get_user()
+            try:
+                repo = user.get_repo(name)
+                return repo is not None
+            except GithubException as e:
+                if e.status == 404:
+                    return False
+                # Other errors might mean it exists but we can't access it
+                return False
+        except Exception:
             return False
 
-        try:
-            user = self.client.get_user()
-            user.get_repo(name)
-            return True
-        except UnknownObjectException:
-            return False
-        except GithubException as exc:
-            logger.error("Repository existence check failed: %s", exc)
-            return False

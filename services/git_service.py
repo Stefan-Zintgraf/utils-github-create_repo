@@ -1,126 +1,325 @@
-"""Git operations helper for the GitHub Repository Creator."""
+"""
+Git service for GitHub Repository Creator.
 
-from __future__ import annotations
+Handles all Git operations including initialization, staging, committing, and pushing.
+"""
 
 import os
-import stat
 import subprocess
 from pathlib import Path
+from typing import Optional
 
-from utils.logger import configure_logger
-
-
-logger = configure_logger("git_service")
+try:
+    from git import Repo
+    GITPYTHON_AVAILABLE = True
+except ImportError:
+    GITPYTHON_AVAILABLE = False
 
 
 class GitService:
-    """Encapsulates Git repository operations."""
-
-    def __init__(self, repo_path: str | Path | None = None) -> None:
-        self.repo_path = Path(repo_path or os.getcwd()).resolve()
-
-    def _run_git_command(self, args: list[str], *, capture_output: bool = True) -> subprocess.CompletedProcess[str]:
-        """Run a git command and return the completed process."""
-        try:
-            return subprocess.run(
-                ["git", *args],
-                cwd=self.repo_path,
-                capture_output=capture_output,
-                text=True,
-            )
-        except Exception as exc:  # pragma: no cover
-            logger.exception("Failed to run git command %s", args)
-            return subprocess.CompletedProcess(args, 1, stdout="", stderr=str(exc))
-        return subprocess.run(
-            ["git", *args],
-            cwd=self.repo_path,
-            capture_output=capture_output,
-            text=True,
-        )
-
-    def initialize_repo(self) -> bool:
-        """Initialize a Git repository."""
-        result = self._run_git_command(["init"])
-        if result.returncode != 0:
-            logger.error("git init failed for %s: %s", self.repo_path, result.stderr.strip())
-            return False
-        return True
-
-    def create_gitkeep_files(self) -> int:
-        """Create .gitkeep files in empty folders."""
-        created = 0
-        for root, _, files in os.walk(self.repo_path):
-            current = Path(root)
-            if ".git" in current.parts:
-                continue
-
-            if files:
-                continue
-
-            gitkeep_path = current / ".gitkeep"
-            if gitkeep_path.exists():
-                continue
-
+    """Service for executing Git operations."""
+    
+    def __init__(self, repo_path: str):
+        """
+        Initialize GitService with repository path.
+        
+        Args:
+            repo_path: Path to the repository directory
+        """
+        self.repo_path = Path(repo_path).resolve()
+        self.repo: Optional[Repo] = None
+        
+        # Try to initialize GitPython repo if available
+        if GITPYTHON_AVAILABLE:
             try:
-                gitkeep_path.write_text("", encoding="utf-8")
-                created += 1
-            except OSError:
-                logger.warning("Failed to write .gitkeep in %s, retrying", current)
-                current.chmod(current.stat().st_mode | stat.S_IWUSR)
-                try:
-                    gitkeep_path.write_text("", encoding="utf-8")
-                    created += 1
-                except OSError:
-                    continue
-
-        return created
-
+                if (self.repo_path / '.git').exists():
+                    self.repo = Repo(self.repo_path)
+            except Exception:
+                # GitPython not available or repo not initialized yet
+                pass
+    
+    def initialize_repo(self) -> bool:
+        """
+        Initialize a Git repository in the specified path.
+        
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if GITPYTHON_AVAILABLE and self.repo is None:
+                # Use GitPython if available
+                self.repo = Repo.init(self.repo_path)
+                return True
+            else:
+                # Use subprocess as fallback
+                result = subprocess.run(
+                    ['git', 'init'],
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                if result.returncode == 0:
+                    # Update repo reference if GitPython is available
+                    if GITPYTHON_AVAILABLE:
+                        try:
+                            self.repo = Repo(self.repo_path)
+                        except Exception:
+                            pass
+                    return True
+                return False
+        except Exception:
+            return False
+    
+    def create_gitkeep_files(self) -> int:
+        """
+        Create .gitkeep files in all empty folders.
+        
+        Recursively scans all directories and creates .gitkeep files
+        in folders that contain no files and no subdirectories (leaf directories).
+        Note: Folders containing only .gitkeep files are considered empty.
+        Hidden files (starting with '.') are treated as regular files.
+        
+        Returns:
+            Number of .gitkeep files created
+        """
+        count = 0
+        gitkeep_name = '.gitkeep'
+        
+        def is_empty_leaf_folder(folder_path: Path) -> bool:
+            """
+            Check if a folder is an empty leaf directory (no files, no subdirectories).
+            Folders containing only .gitkeep files are considered empty.
+            """
+            try:
+                items = list(folder_path.iterdir())
+                
+                has_files = False
+                has_subdirs = False
+                
+                for item in items:
+                    # Skip .git directory
+                    if item.name == '.git' and item.is_dir():
+                        continue
+                    
+                    # If it's a file
+                    if item.is_file():
+                        if item.name != gitkeep_name:
+                            has_files = True
+                            break
+                    # If it's a directory
+                    elif item.is_dir():
+                        has_subdirs = True
+                
+                # Empty if no files (except .gitkeep) and no subdirectories
+                return not has_files and not has_subdirs
+            except (PermissionError, OSError):
+                # Can't read directory, skip it
+                return False
+        
+        # Recursively walk through all directories
+        for root, dirs, files in os.walk(self.repo_path):
+            root_path = Path(root)
+            
+            # Skip .git directory
+            if '.git' in root_path.parts:
+                continue
+            
+            # Check if this directory is an empty leaf folder
+            if is_empty_leaf_folder(root_path):
+                gitkeep_path = root_path / gitkeep_name
+                
+                # Only create if it doesn't already exist
+                if not gitkeep_path.exists():
+                    try:
+                        gitkeep_path.touch()
+                        count += 1
+                    except (PermissionError, OSError):
+                        # Can't create file, skip
+                        pass
+        
+        return count
+    
     def stage_all_files(self) -> tuple[int, int]:
-        """Stage all files and report counts."""
-        add_result = self._run_git_command(["add", "."])
-        if add_result.returncode != 0:
-            logger.error("git add failed: %s", add_result.stderr.strip())
+        """
+        Stage all files in the repository.
+        
+        Returns:
+            Tuple of (file_count, total_size_in_bytes)
+        """
+        try:
+            # Stage all files
+            if GITPYTHON_AVAILABLE and self.repo:
+                # Use GitPython
+                self.repo.git.add('.')
+                # Count files
+                file_count = 0
+                total_size = 0
+                for item in self.repo_path.rglob('*'):
+                    if item.is_file() and '.git' not in item.parts:
+                        file_count += 1
+                        total_size += item.stat().st_size
+                return file_count, total_size
+            else:
+                # Use subprocess
+                result = subprocess.run(
+                    ['git', 'add', '.'],
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                if result.returncode == 0:
+                    # Count files manually
+                    file_count = 0
+                    total_size = 0
+                    for root, dirs, files in os.walk(self.repo_path):
+                        # Skip .git directory
+                        if '.git' in root:
+                            continue
+                        for file in files:
+                            file_path = Path(root) / file
+                            if file_path.is_file():
+                                file_count += 1
+                                try:
+                                    total_size += file_path.stat().st_size
+                                except OSError:
+                                    pass
+                    return file_count, total_size
+                return 0, 0
+        except Exception:
             return 0, 0
-
-        ls_result = self._run_git_command(["ls-files"])
-        files = [line for line in ls_result.stdout.splitlines() if line]
-        total_size = sum(
-            (self.repo_path / file).stat().st_size
-            for file in files
-            if (self.repo_path / file).exists()
-        )
-
-        return len(files), total_size
-
+    
     def commit(self, message: str) -> bool:
-        """Create a commit."""
-        result = self._run_git_command(["commit", "-m", message])
-        if result.returncode != 0:
-            logger.error("git commit failed: %s", result.stderr.strip())
+        """
+        Create a commit with the given message.
+        
+        Args:
+            message: Commit message
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        if not message or not message.strip():
             return False
-        return True
-
+        
+        try:
+            if GITPYTHON_AVAILABLE and self.repo:
+                # Use GitPython
+                self.repo.index.commit(message)
+                return True
+            else:
+                # Use subprocess
+                result = subprocess.run(
+                    ['git', 'commit', '-m', message],
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                return result.returncode == 0
+        except Exception:
+            return False
+    
     def add_remote(self, url: str) -> bool:
-        """Add a remote origin, replacing an existing one if present."""
-        self._run_git_command(["remote", "remove", "origin"])
-        result = self._run_git_command(["remote", "add", "origin", url])
-        if result.returncode != 0:
-            logger.error("git remote add failed: %s", result.stderr.strip())
+        """
+        Add a remote repository URL.
+        
+        Args:
+            url: Remote repository URL
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if GITPYTHON_AVAILABLE and self.repo:
+                # Use GitPython - remove existing remote if it exists
+                try:
+                    self.repo.delete_remote('origin')
+                except Exception:
+                    pass
+                self.repo.create_remote('origin', url)
+                return True
+            else:
+                # Use subprocess - remove existing remote if it exists
+                subprocess.run(
+                    ['git', 'remote', 'remove', 'origin'],
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    check=False
+                )
+                # Add new remote
+                result = subprocess.run(
+                    ['git', 'remote', 'add', 'origin', url],
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                return result.returncode == 0
+        except Exception:
             return False
-        return True
-
+    
     def rename_branch(self, branch_name: str) -> bool:
-        """Rename the current branch."""
-        result = self._run_git_command(["branch", "-M", branch_name])
-        if result.returncode != 0:
-            logger.error("git branch rename failed: %s", result.stderr.strip())
+        """
+        Rename the current branch.
+        
+        Args:
+            branch_name: New branch name
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if GITPYTHON_AVAILABLE and self.repo:
+                # Use GitPython
+                try:
+                    self.repo.git.branch('-M', branch_name)
+                    return True
+                except Exception:
+                    # Branch might already be named correctly
+                    return True
+            else:
+                # Use subprocess
+                result = subprocess.run(
+                    ['git', 'branch', '-M', branch_name],
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                # Return True even if branch is already named correctly
+                return result.returncode == 0 or 'already exists' in result.stderr.lower()
+        except Exception:
             return False
-        return True
+    
+    def push(self, branch: str, remote: str = "origin") -> bool:
+        """
+        Push commits to remote repository.
+        
+        Args:
+            branch: Branch name to push
+            remote: Remote name (default: "origin")
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        try:
+            if GITPYTHON_AVAILABLE and self.repo:
+                # Use GitPython
+                origin = self.repo.remote(remote)
+                origin.push(branch, set_upstream=True)
+                return True
+            else:
+                # Use subprocess
+                result = subprocess.run(
+                    ['git', 'push', '-u', remote, branch],
+                    cwd=self.repo_path,
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                return result.returncode == 0
+        except Exception:
+            return False
 
-    def push(self, branch: str, remote: str) -> bool:
-        """Push to a remote repository."""
-        result = self._run_git_command(["push", "-u", remote, branch])
-        if result.returncode != 0:
-            logger.error("git push failed: %s", result.stderr.strip())
-            return False
-        return True

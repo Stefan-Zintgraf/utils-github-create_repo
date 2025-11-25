@@ -45,7 +45,8 @@ Thumbs.db
 
 # Project specific
 test_folder_structure/
-p*_s*/
+step_archive/
+test_steps/
 
 
 # GitHub token (security)

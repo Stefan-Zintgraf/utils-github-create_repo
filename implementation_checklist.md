@@ -27,14 +27,14 @@ python update_checklist.py <phase> <step>
 
 ## Important: Step Completion Storage
 
-**After successfully implementing and testing each step, all files, folders, and related artifacts must be stored in a subfolder named with the pattern `p{phase}_s{step}`.**
+**After successfully implementing and testing each step, all files, folders, and related artifacts must be stored in a subfolder within `step_archive/` named with the pattern `p{phase}_s{step}`.**
 
-**Every checklist step must also include the creation of a runnable `test_step_X_Y.py` script that verifies that step’s functionality, exercises `update_checklist.py`, and confirms the step’s checkbox when executed. Writing that script is part of the step’s implementation work.**
+**Every checklist step must also include the creation of a runnable `test_step_X_Y.py` script that verifies that step's functionality, exercises `update_checklist.py`, and confirms the step's checkbox when executed. Writing that script is part of the step's implementation work. All test scripts must be stored in the `test_steps/` subfolder.**
 
 **Examples:**
-- Phase 1, Step 1.1 → `p1_s1.1/`
-- Phase 2, Step 2.3 → `p2_s2.3/`
-- Phase 3, Step 3.2 → `p3_s3.2/`
+- Phase 1, Step 1.1 → `step_archive/p1_s1.1/` and `test_steps/test_step_1_1.py`
+- Phase 2, Step 2.3 → `step_archive/p2_s2.3/` and `test_steps/test_step_2_3.py`
+- Phase 3, Step 3.2 → `step_archive/p3_s3.2/` and `test_steps/test_step_3_2.py`
 
 **What to store:**
 - All source code files created/modified in that step
@@ -47,40 +47,41 @@ python update_checklist.py <phase> <step>
 
 **Automated Process (Preferred):**
 1. Complete the step implementation (automation agent, e.g., Codex, will orchestrate all required edits and script generation)
-2. Run the test script and verify success (automation agent runs each `test_step_X_Y.py`)
-3. Re-run every `test_step_X_Y.py` script introduced so far, including previous steps, to ensure no regressions are introduced; adjust older scripts as needed to reflect intentional interfaces and requirements
-4. Copy all step-related files to the appropriate subfolder (e.g., `p3_s3.2/`) and gather logs (automation agent automates this archival)
-5. Checkboxes are automatically updated by test scripts (see `update_checklist.py`)
-6. **Update and push to git repository:** (automation agent executes `git add`, commit, and push once validation passes)
-   - Add files: `git add .` (step subfolders `p*_s*/` are automatically excluded via `.gitignore`)
+2. Create test script `test_steps/test_step_X_Y.py` (automation agent creates this)
+3. Run the test script and verify success (automation agent runs each `test_steps/test_step_X_Y.py`)
+4. Re-run every `test_steps/test_step_X_Y.py` script introduced so far, including previous steps, to ensure no regressions are introduced; adjust older scripts as needed to reflect intentional interfaces and requirements
+5. Copy all step-related files to the appropriate subfolder (e.g., `step_archive/p3_s3.2/`) and gather logs (automation agent automates this archival)
+6. Checkboxes are automatically updated by test scripts (see `update_checklist.py`)
+7. **Update and push to git repository:** (automation agent executes `git add`, commit, and push once validation passes)
+   - Add files: `git add .` (step archive folder `step_archive/` and test steps folder `test_steps/` are automatically excluded via `.gitignore`)
    - Commit: `git commit -m "Step X.Y: [Step description]"`
    - Push: `git push origin main`
-7. Verify the checkbox is checked in the progress summary below
+8. Verify the checkbox is checked in the progress summary below
 
 **Manual Process (if automation not available):**
 1. Complete step implementation
-2. Create test script `test_step_X_Y.py` (see `implementation_hints.md` for template)
-3. Run test script and verify success: `python test_step_X_Y.py`
+2. Create test script `test_steps/test_step_X_Y.py` (see `implementation_hints.md` for template)
+3. Run test script and verify success: `python test_steps/test_step_X_Y.py`
 4. Check success log: `logs/step_X_Y_success.log`
-5. Copy all step-related files to subfolder `p{phase}_s{step}/` (e.g., `p3_s3.2/`)
+5. Copy all step-related files to subfolder `step_archive/p{phase}_s{step}/` (e.g., `step_archive/p3_s3.2/`)
 6. Maintain directory structure within the subfolder
 7. Update checklist: `python update_checklist.py {phase} {step}`
 8. Commit and push: `git add . && git commit -m "Step X.Y: [description]" && git push origin main`
 
 **Automation Note:** An automation agent (e.g., Codex) is responsible for running the entire workflow described above—test execution, regression checks, artifact archiving, checklist updates, and git pushes—without requiring any direct input from you unless a specific decision is needed (e.g., choosing between conflicting implementations). The agent should not stop mid-step or request confirmation unless a course of action cannot be determined automatically. Unless explicitly instructed to halt before a phase, the automation agent completes the full lifecycle for every step so nothing is left half-finished.
 
-**Important:** Step subfolders (`p*_s*/`) are in `.gitignore` and must never be committed to the repository. They are for local step storage only.
+**Important:** The `step_archive/` and `test_steps/` folders are in `.gitignore` and must never be committed to the repository. They are for local step storage and testing only.
 
 ## Implementation Progress Summary
 
 ### Prerequisites
-- [x] Python 3.9+ installed
-- [x] Git installed and accessible via command line
+- [ ] Python 3.9+ installed
+- [ ] Git installed and accessible via command line
 - [ ] GitHub account with Personal Access Token
-- [x] Test folder structure for validation
+- [ ] Test folder structure for validation
 
 ### Phase 1: Project Setup
-- [x] Step 1.1: Create Project Structure
+- [ ] Step 1.1: Create Project Structure
 - [x] Step 1.2: Create Requirements File
 - [x] Step 1.3: Create Logging Directory and Utility
 
@@ -97,12 +98,12 @@ python update_checklist.py <phase> <step>
 - [x] Step 3.3: Implement Background Threading
 
 ### Phase 4: Integration
-- [x] Step 4.1: Create Main Entry Point
+- [ ] Step 4.1: Create Main Entry Point
 - [x] Step 4.2: End-to-End Integration Test
 
 ### Phase 5: Error Handling & Polish
 - [x] Step 5.1: Implement Comprehensive Error Handling
-- [x] Step 5.2: Create .gitignore File
+- [ ] Step 5.2: Create .gitignore File
 
 ---
 
@@ -120,9 +121,9 @@ python update_checklist.py <phase> <step>
 - `services/__init__.py`
 - `utils/__init__.py`
 
-**Test:** Run `test_step_1_1.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_1_1.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p1_s1.1/` subfolder after successful testing.
+**After Completion:** Store all files in `step_archive/p1_s1.1/` subfolder after successful testing. Store test script in `test_steps/test_step_1_1.py`.
 
 ---
 
@@ -132,7 +133,7 @@ python update_checklist.py <phase> <step>
 **Files to Create/Modify:**
 - `requirements.txt` with: customtkinter>=5.2.0, PyGithub>=2.1.1, GitPython>=3.1.40, requests>=2.31.0
 
-**Test:** Run `test_step_1_2.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_1_2.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p1_s1.2/` subfolder after successful testing.
 
@@ -145,7 +146,7 @@ python update_checklist.py <phase> <step>
 - `utils/logger.py`
 - `logs/` directory (auto-created)
 
-**Test:** Run `test_step_1_3.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_1_3.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p1_s1.3/` subfolder after successful testing.
 
@@ -164,7 +165,7 @@ python update_checklist.py <phase> <step>
 - `validate_repository_name(name: str) -> tuple[bool, str]`
 - `validate_token(token: str) -> tuple[bool, str]`
 
-**Test:** Run `test_step_2_1.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_2_1.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p2_s2.1/` subfolder after successful testing.
 
@@ -186,7 +187,7 @@ python update_checklist.py <phase> <step>
 - `rename_branch(branch_name: str) -> bool`
 - `push(branch: str, remote: str) -> bool`
 
-**Test:** Run `test_step_2_2.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_2_2.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p2_s2.2/` subfolder after successful testing.
 
@@ -206,7 +207,7 @@ python update_checklist.py <phase> <step>
 - Create `.gitkeep` file in each empty folder
 - Return count of files created
 
-**Test:** Run `test_step_2_3.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_2_3.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p2_s2.3/` subfolder after successful testing.
 
@@ -226,7 +227,7 @@ python update_checklist.py <phase> <step>
 - `rename_branch(branch)` - Execute `git branch -M`
 - `push(branch, remote)` - Execute `git push -u`
 
-**Test:** Run `test_step_2_4.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_2_4.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p2_s2.4/` subfolder after successful testing.
 
@@ -244,7 +245,7 @@ python update_checklist.py <phase> <step>
 - `create_repository(name: str, private: bool, description: str) -> str`
 - `check_repository_exists(name: str) -> bool`
 
-**Test:** Run `test_step_2_5.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_2_5.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p2_s2.5/` subfolder after successful testing.
 
@@ -265,7 +266,7 @@ python update_checklist.py <phase> <step>
 - Progress bar
 - Status text area
 
-**Test:** Run `test_step_3_1.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_3_1.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p3_s3.1/` subfolder after successful testing.
 
@@ -284,7 +285,7 @@ python update_checklist.py <phase> <step>
 - `update_status(message, error)` - Update status log
 - `update_progress(value)` - Update progress bar
 
-**Test:** Run `test_step_3_2.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_3_2.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p3_s3.2/` subfolder after successful testing.
 
@@ -301,7 +302,7 @@ python update_checklist.py <phase> <step>
 - UI should remain responsive during operations
 - Status updates should be thread-safe
 
-**Test:** Run `test_step_3_3.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_3_3.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p3_s3.3/` subfolder after successful testing.
 
@@ -320,7 +321,7 @@ python update_checklist.py <phase> <step>
 - Start application event loop
 - Handle application exit
 
-**Test:** Run `test_step_4_1.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_4_1.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p4_s4.1/` subfolder after successful testing.
 
@@ -339,7 +340,7 @@ python update_checklist.py <phase> <step>
 7. Add remote
 8. Push (mock)
 
-**Test:** Run `test_step_4_2.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_4_2.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p4_s4.2/` subfolder after successful testing.
 
@@ -360,7 +361,7 @@ python update_checklist.py <phase> <step>
 - Errors logged to log files
 - Application doesn't crash on errors
 
-**Test:** Run `test_step_5_1.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_5_1.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p5_s5.1/` subfolder after successful testing.
 
@@ -379,7 +380,7 @@ python update_checklist.py <phase> <step>
 - Log files
 - Test directories
 
-**Test:** Run `test_step_5_2.py` - See `implementation_hints.md` for details
+**Test:** Create and run `test_steps/test_step_5_2.py` - See `implementation_hints.md` for test script template
 
 **After Completion:** Store all files in `p5_s5.2/` subfolder after successful testing.
 
@@ -389,7 +390,7 @@ python update_checklist.py <phase> <step>
 
 ### Run Individual Tests
 ```bash
-python test_step_X_Y.py
+python test_steps/test_step_X_Y.py
 ```
 
 ### Run All Tests

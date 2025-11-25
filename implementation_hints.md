@@ -4,12 +4,12 @@ This document contains detailed test scripts, verification code, and implementat
 
 ## Important: Step Completion Storage
 
-**After successfully implementing and testing each step, all files, folders, and related artifacts must be stored in a subfolder named with the pattern `p{phase}_s{step}`.**
+**After successfully implementing and testing each step, all files, folders, and related artifacts must be stored in a subfolder within `step_archive/` named with the pattern `p{phase}_s{step}`. All test scripts must be stored in the `test_steps/` subfolder.**
 
 **Examples:**
-- Phase 1, Step 1.1 → `p1_s1.1/`
-- Phase 2, Step 2.3 → `p2_s2.3/`
-- Phase 3, Step 3.2 → `p3_s3.2/`
+- Phase 1, Step 1.1 → `step_archive/p1_s1.1/` and `test_steps/test_step_1_1.py`
+- Phase 2, Step 2.3 → `step_archive/p2_s2.3/` and `test_steps/test_step_2_3.py`
+- Phase 3, Step 3.2 → `step_archive/p3_s3.2/` and `test_steps/test_step_3_2.py`
 
 **What to store:**
 - All source code files created/modified in that step
@@ -20,16 +20,17 @@ This document contains detailed test scripts, verification code, and implementat
 
 **Storage Process:**
 1. Complete the step implementation
-2. Run the test script and verify success (check `logs/step_X_Y_success.log`)
-3. Copy all step-related files to the appropriate subfolder (e.g., `p3_s3.2/`)
-4. Maintain the directory structure within the subfolder
-5. Checkboxes are automatically updated by test scripts (no manual action needed)
-6. **Update and push to git repository:**
-   - Add files: `git add .` (step subfolders `p*_s*/` are automatically excluded)
+2. Create test script `test_steps/test_step_X_Y.py`
+3. Run the test script and verify success (check `logs/step_X_Y_success.log`)
+4. Copy all step-related files to the appropriate subfolder (e.g., `step_archive/p3_s3.2/`)
+5. Maintain the directory structure within the subfolder
+6. Checkboxes are automatically updated by test scripts (no manual action needed)
+7. **Update and push to git repository:**
+   - Add files: `git add .` (step archive folder `step_archive/` and test steps folder `test_steps/` are automatically excluded)
    - Commit: `git commit -m "Step X.Y: [Step description]"`
    - Push: `git push origin main`
 
-**Important:** Step subfolders (`p*_s*/`) are excluded from git via `.gitignore` and must never be committed. They are for local step storage only.
+**Important:** The `step_archive/` and `test_steps/` folders are excluded from git via `.gitignore` and must never be committed. They are for local step storage and testing only.
 
 ## Automatic Checkbox Updates
 
@@ -164,10 +165,10 @@ If you need full GUI automation, consider:
 
 ## Test Script Template
 
-All test scripts should follow this pattern to automatically update checkboxes:
+All test scripts should follow this pattern to automatically update checkboxes. Test scripts must be stored in the `test_steps/` subfolder:
 
 ```python
-# test_step_X_Y.py
+# test_steps/test_step_X_Y.py
 import os
 import sys
 
@@ -192,9 +193,10 @@ def test_step_X_Y():
             print(f"Warning: Could not update checkbox: {str(e)}")
         
         # Note: After test success, remember to:
-        # 1. Store files in p{phase}_s{step}/ subfolder
-        # 2. Update git: git add . && git commit -m "Step X.Y: [description]" && git push origin main
-        #    (Step subfolders p*_s*/ are automatically excluded via .gitignore)
+        # 1. Store files in step_archive/p{phase}_s{step}/ subfolder
+        # 2. Store test script in test_steps/test_step_X_Y.py
+        # 3. Update git: git add . && git commit -m "Step X.Y: [description]" && git push origin main
+        #    (step_archive/ and test_steps/ are automatically excluded via .gitignore)
         
         return True
 
@@ -210,7 +212,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_1_1.py
+# test_steps/test_step_1_1.py
 import os
 
 required_dirs = ['ui', 'services', 'utils']
@@ -258,7 +260,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_1_2.py
+# test_steps/test_step_1_2.py
 import os
 import re
 
@@ -307,7 +309,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_1_3.py
+# test_steps/test_step_1_3.py
 import os
 import sys
 sys.path.insert(0, '.')
@@ -362,7 +364,7 @@ if __name__ == '__main__':
 
 **Test Cases:**
 ```python
-# test_step_2_1.py
+# test_steps/test_step_2_1.py
 import sys
 import os
 sys.path.insert(0, '.')
@@ -437,7 +439,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_2_2.py
+# test_steps/test_step_2_2.py
 import sys
 import os
 import inspect
@@ -517,7 +519,7 @@ test_folder/
 
 **Verification Script:**
 ```python
-# test_step_2_3.py
+# test_steps/test_step_2_3.py
 import sys
 import os
 import tempfile
@@ -590,7 +592,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_2_4.py
+# test_steps/test_step_2_4.py
 import sys
 import os
 import tempfile
@@ -663,7 +665,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_2_5.py
+# test_steps/test_step_2_5.py
 import sys
 import os
 sys.path.insert(0, '.')
@@ -729,7 +731,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_3_1.py
+# test_steps/test_step_3_1.py
 import sys
 import os
 sys.path.insert(0, '.')
@@ -800,7 +802,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_3_2.py
+# test_steps/test_step_3_2.py
 import sys
 import os
 sys.path.insert(0, '.')
@@ -882,7 +884,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_3_3.py
+# test_steps/test_step_3_3.py
 import sys
 import os
 import threading
@@ -974,7 +976,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_4_1.py
+# test_steps/test_step_4_1.py
 import sys
 import os
 
@@ -1031,7 +1033,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_4_2.py
+# test_steps/test_step_4_2.py
 import sys
 import os
 import tempfile
@@ -1105,7 +1107,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_5_1.py
+# test_steps/test_step_5_1.py
 import sys
 import os
 sys.path.insert(0, '.')
@@ -1159,7 +1161,7 @@ if __name__ == '__main__':
 
 **Verification Script:**
 ```python
-# test_step_5_2.py
+# test_steps/test_step_5_2.py
 import os
 
 def test_gitignore():
@@ -1223,21 +1225,21 @@ def run_all_tests():
     os.makedirs('logs', exist_ok=True)
     
     test_files = [
-        'test_step_1_1.py',
-        'test_step_1_2.py',
-        'test_step_1_3.py',
-        'test_step_2_1.py',
-        'test_step_2_2.py',
-        'test_step_2_3.py',
-        'test_step_2_4.py',
-        'test_step_2_5.py',
-        'test_step_3_1.py',
-        'test_step_3_2.py',
-        'test_step_3_3.py',
-        'test_step_4_1.py',
-        'test_step_4_2.py',
-        'test_step_5_1.py',
-        'test_step_5_2.py'
+        'test_steps/test_step_1_1.py',
+        'test_steps/test_step_1_2.py',
+        'test_steps/test_step_1_3.py',
+        'test_steps/test_step_2_1.py',
+        'test_steps/test_step_2_2.py',
+        'test_steps/test_step_2_3.py',
+        'test_steps/test_step_2_4.py',
+        'test_steps/test_step_2_5.py',
+        'test_steps/test_step_3_1.py',
+        'test_steps/test_step_3_2.py',
+        'test_steps/test_step_3_3.py',
+        'test_steps/test_step_4_1.py',
+        'test_steps/test_step_4_2.py',
+        'test_steps/test_step_5_1.py',
+        'test_steps/test_step_5_2.py'
     ]
     
     results = {}
@@ -1295,7 +1297,7 @@ if __name__ == '__main__':
 
 1. **Run Individual Tests:**
    ```bash
-   python test_step_X_Y.py
+   python test_steps/test_step_X_Y.py
    ```
 
 2. **Run All Tests:**
@@ -1315,7 +1317,8 @@ if __name__ == '__main__':
 
 5. **After Successful Test:**
    - Verify success by checking `logs/step_X_Y_success.log`
-   - Copy all step-related files to subfolder `p{phase}_s{step}/` (e.g., `p3_s3.2/`)
+   - Copy all step-related files to subfolder `step_archive/p{phase}_s{step}/` (e.g., `step_archive/p3_s3.2/`)
+   - Ensure test script is stored in `test_steps/test_step_X_Y.py`
    - Maintain directory structure within the subfolder
    - Check off the step in the checklist
 

@@ -523,9 +523,9 @@ class MainWindow(customtkinter.CTk):
 - GitHub service methods
 - Git service methods
 - Error handling
-**Each phase/step described in the implementation checklist must include the creation of a corresponding `test_step_X_Y.py` script as part of that step’s implementation work; the script should verify the step-specific requirements, exercise `update_checklist.py`, and fully automate the validation without additional manual input.** These scripts should live at the repository root, follow the naming convention `test_step_{phase}_{step}.py`, and be runnable so automation can sequence through them.
+**Each phase/step described in the implementation checklist must include the creation of a corresponding `test_step_X_Y.py` script as part of that step's implementation work; the script should verify the step-specific requirements, exercise `update_checklist.py`, and fully automate the validation without additional manual input.** These scripts should be stored in the `test_steps/` subfolder, follow the naming convention `test_step_{phase}_{step}.py`, and be runnable so automation can sequence through them.
 
-After completing any step, an automation agent (e.g., Codex) executes **that step’s** test script first and fixes any resulting issues before proceeding. Only once the current step passes should the agent re-run previously introduced `test_step_{phase}_{step}.py` scripts to ensure no regressions; older scripts are updated as needed, outputs are logged, artifacts archived, and the cycle concludes. The expectation is that the automation agent runs the full lifecycle without requiring any manual triggers unless a specific implementation choice or confirmation is required, in which case the agent requests guidance before continuing. Unless explicitly instructed to halt before a phase, the automation agent carries the step through the entire lifecycle so no part of a step remains incomplete.
+After completing any step, an automation agent (e.g., Codex) executes **that step's** test script first and fixes any resulting issues before proceeding. Only once the current step passes should the agent re-run previously introduced `test_steps/test_step_{phase}_{step}.py` scripts to ensure no regressions; older scripts are updated as needed, outputs are logged, artifacts archived, and the cycle concludes. The expectation is that the automation agent runs the full lifecycle without requiring any manual triggers unless a specific implementation choice or confirmation is required, in which case the agent requests guidance before continuing. Unless explicitly instructed to halt before a phase, the automation agent carries the step through the entire lifecycle so no part of a step remains incomplete.
 
 ### Integration Tests
 - End-to-end repository creation
@@ -578,12 +578,12 @@ After each implementation step is completed:
    - Run the test script and verify success
 
 2. **Store Step Files:**
-   - Copy all step-related files to subfolder `p{phase}_s{step}/` (e.g., `p1_s1.1/`)
+   - Copy all step-related files to subfolder `step_archive/p{phase}_s{step}/` (e.g., `step_archive/p1_s1.1/`)
    - Maintain directory structure within the subfolder
 
 3. **Update Git Repository:**
    - Add all modified/new project files to git: `git add .`
-   - **Important:** Step subfolders (`p*_s*/`) are automatically excluded via `.gitignore` and must never be committed
+   - **Important:** Step archive folder (`step_archive/`) and test steps folder (`test_steps/`) are automatically excluded via `.gitignore` and must never be committed
    - Commit with descriptive message: `git commit -m "Step X.Y: [Step description]"`
    - Push to remote: `git push origin main`
 
@@ -592,7 +592,7 @@ After each implementation step is completed:
 
 ### Git Repository Rules
 
-- **Step subfolders excluded:** All `p*_s*/` folders are in `.gitignore` and must never be added to the repository
+- **Step archive and test folders excluded:** The `step_archive/` and `test_steps/` folders are in `.gitignore` and must never be added to the repository
 - **Automatic commits:** Each completed step should result in a git commit and push
 - **Commit messages:** Use format "Step X.Y: [description]" for clarity
 - **Repository sync:** Keep the remote repository up-to-date after each step

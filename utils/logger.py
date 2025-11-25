@@ -1,38 +1,56 @@
-"""Logging utilities for the GitHub Repository Creator application."""
+"""
+Logging utility for GitHub Repository Creator.
 
-from __future__ import annotations
+Provides centralized logging configuration and setup.
+"""
 
 import logging
 import os
-
-LOG_DIR = os.path.join(os.getcwd(), "logs")
-LOG_FILE_NAME = "application.log"
-LOG_FILE = os.path.join(LOG_DIR, LOG_FILE_NAME)
+from datetime import datetime
+from pathlib import Path
 
 
-def ensure_log_directory() -> None:
-    """Ensure the shared logs directory exists."""
-    os.makedirs(LOG_DIR, exist_ok=True)
-
-
-def configure_logger(name: str = "github_repo_creator", level: int | str = logging.INFO) -> logging.Logger:
+def setup_logger(name: str, log_level: int = logging.INFO) -> logging.Logger:
     """
-    Configure and return a logger writing to the shared log file.
-
+    Set up and configure a logger instance.
+    
     Args:
-        name: Logger name.
-        level: Logging level (int or str).
+        name: Logger name (typically __name__ of the calling module)
+        log_level: Logging level (default: logging.INFO)
+        
+    Returns:
+        Configured logger instance
     """
-    ensure_log_directory()
-    numeric_level = logging.getLevelName(level)
+    # Create logs directory if it doesn't exist
+    logs_dir = Path('logs')
+    logs_dir.mkdir(exist_ok=True)
+    
+    # Create logger
     logger = logging.getLogger(name)
-    logger.setLevel(numeric_level)
-
-    if not any(isinstance(handler, logging.FileHandler) and handler.baseFilename == LOG_FILE for handler in logger.handlers):
-        file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
-        file_handler.setLevel(numeric_level)
-        formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
+    logger.setLevel(log_level)
+    
+    # Avoid adding multiple handlers if logger already configured
+    if logger.handlers:
+        return logger
+    
+    # Create formatter
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    # File handler - log to file with timestamp
+    log_file = logs_dir / f'app_{datetime.now().strftime("%Y%m%d")}.log'
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(log_level)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    
+    # Console handler - log to console
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+    
     return logger
+
