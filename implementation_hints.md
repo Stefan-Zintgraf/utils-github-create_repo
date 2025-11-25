@@ -737,6 +737,60 @@ if __name__ == '__main__':
 
 ## Phase 3: User Interface
 
+### Configuration Management
+
+**Important:** User inputs must be persisted to `app_config.json` (excluded from git). The Personal Access Token (PAT) must NEVER be saved.
+
+**Config Utility (`utils/config.py`):**
+```python
+from utils.config import load_config, save_config
+
+# Load saved configuration
+config = load_config()
+username = config.get('username', '')
+
+# Save configuration (PAT is automatically excluded)
+config = {
+    'username': 'octocat',
+    'folder_path': 'C:\\Projects\\MyProject',
+    'repo_name': 'my-repo',
+    'visibility': 'private',
+    'description': 'My project',
+    'commit_message': 'Initial commit'
+    # Note: 'token' or 'pat' keys are automatically excluded
+}
+save_config(config)
+```
+
+**Help Button Implementation:**
+```python
+def _create_help_button(self, parent, title: str, message: str):
+    """Create a help/info button next to a label."""
+    help_button = customtkinter.CTkButton(
+        parent,
+        text="?",
+        width=25,
+        height=25,
+        font=customtkinter.CTkFont(size=12, weight="bold"),
+        command=lambda: self._show_help_dialog(title, message)
+    )
+    help_button.pack(side="right", padx=(5, 0))
+
+def _show_help_dialog(self, title: str, message: str):
+    """Show a modal help dialog with information."""
+    dialog = customtkinter.CTkToplevel(self)
+    dialog.title(f"Help: {title}")
+    dialog.geometry("500x400")
+    dialog.transient(self)
+    dialog.grab_set()
+    
+    # Center dialog on parent window
+    # ... (implementation details)
+    
+    # Title and message text
+    # ... (implementation details)
+```
+
 ### Step 3.1: Create Main Window Structure
 
 **Verification Script:**

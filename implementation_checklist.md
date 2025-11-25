@@ -301,12 +301,27 @@ python update_checklist.py <phase> <step>
 - Window initialization with minimum size (600x400) and default size (800x600)
 - **Scrollable content area** using CTkScrollableFrame to ensure all elements are accessible
 - All input fields (folder path, username, token, repo name, etc.)
+- **Help/info buttons (?) next to each input field label** showing expected input format and examples
 - All buttons (browse, create, clear, exit)
 - Progress bar
 - Status text area
 - **Scrollbars must appear automatically when content exceeds window height**
+- **Configuration management:** Load saved inputs on startup, save inputs automatically (excluding PAT)
 
 **⚠️ UI REQUIREMENT:** The window must be scrollable to work on smaller screens. All UI elements must be accessible via scrolling.
+
+**⚠️ UI REQUIREMENT - Help Elements:**
+- Each input field must have a help button (?) next to its label
+- Help buttons open modal dialogs with:
+  - Expected input format
+  - Examples of valid input
+  - Additional relevant information
+
+**⚠️ UI REQUIREMENT - Input Persistence:**
+- All user inputs (except PAT) must be saved to `app_config.json` (excluded from git)
+- Fields must be prefilled from saved config on startup
+- Config must be saved automatically when values change (debounced)
+- PAT must NEVER be saved to configuration file
 
 **Test:** Create and run `test_steps/test_step_3_1.py` - See `implementation_hints.md` for test script template
 
@@ -327,8 +342,17 @@ python update_checklist.py <phase> <step>
 - `on_browse_clicked()` - Open folder dialog
 - `on_create_clicked()` - Start repository creation process
 - `on_clear_clicked()` - Reset all fields
+- `_create_help_button()` - Create help/info button next to input fields
+- `_show_help_dialog()` - Show modal help dialog with information
+- `_load_config()` - Load saved configuration and prefill fields (excluding PAT)
+- `_save_config()` - Save current field values to config file (excluding PAT)
+- `_setup_config_autosave()` - Set up automatic config saving when values change
 - `update_status(message, error)` - Update status log
 - `update_progress(value)` - Update progress bar
+
+**⚠️ REQUIREMENT:** Help buttons must be implemented for all input fields with relevant examples and format information.
+
+**⚠️ REQUIREMENT:** Configuration persistence must be implemented to save/load user inputs (excluding PAT).
 
 **Test:** Create and run `test_steps/test_step_3_2.py` - See `implementation_hints.md` for test script template
 

@@ -90,10 +90,10 @@ class GitHubService:
             repo = user.create_repo(
                 name=name,
                 private=private,
-                description=description,
-                auto_init=False,  # Don't initialize with README
-                gitignore_template=None,
-                license_template=None
+                description=description if description else None,
+                auto_init=False  # Don't initialize with README
+                # Note: gitignore_template and license_template are omitted
+                # PyGithub doesn't accept None for these optional parameters
             )
             return repo.clone_url
         except GithubException as e:

@@ -17,6 +17,7 @@ from services.validation_service import (
 from services.git_service import GitService
 from services.github_service import GitHubService
 from utils.logger import setup_logger
+from utils.config import load_config, save_config
 
 
 class MainWindow(customtkinter.CTk):
@@ -52,8 +53,17 @@ class MainWindow(customtkinter.CTk):
         # Create UI components
         self._create_widgets()
         
+        # Load saved configuration (prefill fields)
+        self._load_config()
+        
+        # Bind to save config when values change
+        self._setup_config_autosave()
+        
         # Center window on screen
         self._center_window()
+        
+        # Handle window close to save config
+        self.protocol("WM_DELETE_WINDOW", self.on_exit_clicked)
     
     def _center_window(self):
         """Center the window on the screen."""
@@ -93,12 +103,24 @@ class MainWindow(customtkinter.CTk):
         folder_frame = customtkinter.CTkFrame(main_frame)
         folder_frame.pack(fill="x", pady=10)
         
+        folder_label_frame = customtkinter.CTkFrame(folder_frame)
+        folder_label_frame.pack(fill="x", padx=10, pady=(10, 5))
+        
         folder_label = customtkinter.CTkLabel(
-            folder_frame,
+            folder_label_frame,
             text="Source Folder Path",
             font=customtkinter.CTkFont(size=14, weight="bold")
         )
-        folder_label.pack(anchor="w", padx=10, pady=(10, 5))
+        folder_label.pack(side="left")
+        
+        self._create_help_button(
+            folder_label_frame,
+            "Source Folder Path",
+            "Select the local folder you want to migrate to GitHub.\n\n"
+            "Example: C:\\Users\\YourName\\Documents\\MyProject\n\n"
+            "The folder should contain the files and subfolders you want to upload.\n"
+            "Empty folders will be preserved using .gitkeep files."
+        )
         
         folder_entry_frame = customtkinter.CTkFrame(folder_frame)
         folder_entry_frame.pack(fill="x", padx=10, pady=(0, 10))
@@ -130,11 +152,23 @@ class MainWindow(customtkinter.CTk):
         )
         auth_label.pack(anchor="w", padx=10, pady=(10, 5))
         
+        username_label_frame = customtkinter.CTkFrame(auth_frame)
+        username_label_frame.pack(fill="x", padx=10, pady=(5, 0))
+        
         username_label = customtkinter.CTkLabel(
-            auth_frame,
+            username_label_frame,
             text="Username:"
         )
-        username_label.pack(anchor="w", padx=10, pady=(5, 0))
+        username_label.pack(side="left")
+        
+        self._create_help_button(
+            username_label_frame,
+            "GitHub Username",
+            "Enter your GitHub username (not email).\n\n"
+            "Example: octocat\n\n"
+            "This is the username you use to log in to GitHub.\n"
+            "It's the part before @ in your GitHub profile URL."
+        )
         
         self.username_entry = customtkinter.CTkEntry(
             auth_frame,
@@ -144,11 +178,29 @@ class MainWindow(customtkinter.CTk):
         )
         self.username_entry.pack(fill="x", padx=10, pady=(5, 10))
         
+        token_label_frame = customtkinter.CTkFrame(auth_frame)
+        token_label_frame.pack(fill="x", padx=10, pady=(5, 0))
+        
         token_label = customtkinter.CTkLabel(
-            auth_frame,
+            token_label_frame,
             text="Personal Access Token:"
         )
-        token_label.pack(anchor="w", padx=10, pady=(5, 0))
+        token_label.pack(side="left")
+        
+        self._create_help_button(
+            token_label_frame,
+            "Personal Access Token",
+            "Enter your GitHub Personal Access Token (PAT).\n\n"
+            "Format examples:\n"
+            "• Classic token: ghp_1234567890abcdef1234567890abcdef12345678\n"
+            "• Fine-grained: github_pat_1234567890abcdef1234567890abcdef...\n\n"
+            "To create a token:\n"
+            "1. Go to GitHub Settings > Developer settings > Personal access tokens\n"
+            "2. Generate new token (classic) or fine-grained token\n"
+            "3. Select 'repo' scope for repository creation\n"
+            "4. Copy the token immediately (it won't be shown again)\n\n"
+            "⚠️ Security: The token will NOT be saved to disk for security reasons."
+        )
         
         self.token_entry = customtkinter.CTkEntry(
             auth_frame,
@@ -178,11 +230,30 @@ class MainWindow(customtkinter.CTk):
         )
         repo_label.pack(anchor="w", padx=10, pady=(10, 5))
         
+        repo_name_label_frame = customtkinter.CTkFrame(repo_frame)
+        repo_name_label_frame.pack(fill="x", padx=10, pady=(5, 0))
+        
         repo_name_label = customtkinter.CTkLabel(
-            repo_frame,
+            repo_name_label_frame,
             text="Repository Name:"
         )
-        repo_name_label.pack(anchor="w", padx=10, pady=(5, 0))
+        repo_name_label.pack(side="left")
+        
+        self._create_help_button(
+            repo_name_label_frame,
+            "Repository Name",
+            "Enter the name for your new GitHub repository.\n\n"
+            "Examples:\n"
+            "• my-awesome-project\n"
+            "• python_utils\n"
+            "• test-repo-123\n\n"
+            "Rules:\n"
+            "• 1-100 characters\n"
+            "• Only letters, numbers, hyphens (-), underscores (_), and periods (.)\n"
+            "• Cannot start or end with a period\n"
+            "• Cannot contain consecutive periods\n"
+            "• Must be unique (not already exist in your account)"
+        )
         
         self.repo_name_entry = customtkinter.CTkEntry(
             repo_frame,
@@ -192,11 +263,24 @@ class MainWindow(customtkinter.CTk):
         )
         self.repo_name_entry.pack(fill="x", padx=10, pady=(5, 10))
         
+        visibility_label_frame = customtkinter.CTkFrame(repo_frame)
+        visibility_label_frame.pack(fill="x", padx=10, pady=(5, 0))
+        
         visibility_label = customtkinter.CTkLabel(
-            repo_frame,
+            visibility_label_frame,
             text="Visibility:"
         )
-        visibility_label.pack(anchor="w", padx=10, pady=(5, 0))
+        visibility_label.pack(side="left")
+        
+        self._create_help_button(
+            visibility_label_frame,
+            "Repository Visibility",
+            "Choose whether your repository is Private or Public.\n\n"
+            "• Private: Only you (and collaborators you add) can see and access the repository\n"
+            "• Public: Anyone on the internet can view the repository\n\n"
+            "Default: Private (recommended for most use cases)\n\n"
+            "You can change this later in the repository settings on GitHub."
+        )
         
         visibility_frame = customtkinter.CTkFrame(repo_frame)
         visibility_frame.pack(fill="x", padx=10, pady=(5, 10))
@@ -217,11 +301,27 @@ class MainWindow(customtkinter.CTk):
         )
         self.public_radio.pack(side="left")
         
+        description_label_frame = customtkinter.CTkFrame(repo_frame)
+        description_label_frame.pack(fill="x", padx=10, pady=(5, 0))
+        
         description_label = customtkinter.CTkLabel(
-            repo_frame,
+            description_label_frame,
             text="Description (optional):"
         )
-        description_label.pack(anchor="w", padx=10, pady=(5, 0))
+        description_label.pack(side="left")
+        
+        self._create_help_button(
+            description_label_frame,
+            "Repository Description",
+            "Enter an optional description for your repository.\n\n"
+            "Examples:\n"
+            "• \"A collection of utility scripts for data processing\"\n"
+            "• \"My personal project for learning Python\"\n"
+            "• \"Custom indicators for NinjaTrader 8\"\n\n"
+            "This description will appear on your repository's main page on GitHub.\n"
+            "It helps others understand what the repository is about.\n\n"
+            "This field is optional - you can leave it empty."
+        )
         
         self.description_entry = customtkinter.CTkEntry(
             repo_frame,
@@ -235,12 +335,28 @@ class MainWindow(customtkinter.CTk):
         commit_frame = customtkinter.CTkFrame(main_frame)
         commit_frame.pack(fill="x", pady=10)
         
+        commit_label_frame = customtkinter.CTkFrame(commit_frame)
+        commit_label_frame.pack(fill="x", padx=10, pady=(10, 5))
+        
         commit_label = customtkinter.CTkLabel(
-            commit_frame,
+            commit_label_frame,
             text="Initial Commit Message",
             font=customtkinter.CTkFont(size=14, weight="bold")
         )
-        commit_label.pack(anchor="w", padx=10, pady=(10, 5))
+        commit_label.pack(side="left")
+        
+        self._create_help_button(
+            commit_label_frame,
+            "Initial Commit Message",
+            "Enter the message for the initial commit.\n\n"
+            "Examples:\n"
+            "• \"Initial commit: add all files and subfolders\"\n"
+            "• \"First commit\"\n"
+            "• \"Initial repository setup\"\n\n"
+            "This message will be used for the first commit when pushing to GitHub.\n"
+            "It describes what this commit contains.\n\n"
+            "Default: \"Initial commit: add all files and subfolders\""
+        )
         
         self.commit_message_entry = customtkinter.CTkEntry(
             commit_frame,
@@ -308,6 +424,8 @@ class MainWindow(customtkinter.CTk):
         if folder:
             self.folder_path_var.set(folder)
             self.update_status(f"Selected folder: {folder}")
+            # Save config when folder is selected
+            self._save_config()
     
     def on_create_clicked(self):
         """Handle create repository button click."""
@@ -506,9 +624,13 @@ class MainWindow(customtkinter.CTk):
         self.status_text.delete("1.0", "end")
         self.progress_bar.pack_forget()
         self.update_status("Fields cleared")
+        # Save cleared config
+        self._save_config()
     
     def on_exit_clicked(self):
         """Handle exit button click."""
+        # Save configuration before exiting
+        self._save_config()
         self.destroy()
     
     def update_status(self, message: str, error: bool = False):
@@ -541,4 +663,126 @@ class MainWindow(customtkinter.CTk):
             self.progress_bar.configure(mode="indeterminate")
             self.progress_bar.start()
         self.update()
+    
+    def _create_help_button(self, parent, title: str, message: str):
+        """
+        Create a help/info button next to a label.
+        
+        Args:
+            parent: Parent widget
+            title: Title for the help dialog
+            message: Help message to display
+        """
+        help_button = customtkinter.CTkButton(
+            parent,
+            text="?",
+            width=25,
+            height=25,
+            font=customtkinter.CTkFont(size=12, weight="bold"),
+            command=lambda: self._show_help_dialog(title, message)
+        )
+        help_button.pack(side="right", padx=(5, 0))
+    
+    def _show_help_dialog(self, title: str, message: str):
+        """
+        Show a help dialog with information.
+        
+        Args:
+            title: Dialog title
+            message: Help message
+        """
+        dialog = customtkinter.CTkToplevel(self)
+        dialog.title(f"Help: {title}")
+        dialog.geometry("500x400")
+        dialog.transient(self)
+        dialog.grab_set()
+        
+        # Center dialog on parent window
+        dialog.update_idletasks()
+        x = self.winfo_x() + (self.winfo_width() // 2) - (500 // 2)
+        y = self.winfo_y() + (self.winfo_height() // 2) - (400 // 2)
+        dialog.geometry(f"500x400+{x}+{y}")
+        
+        # Title
+        title_label = customtkinter.CTkLabel(
+            dialog,
+            text=title,
+            font=customtkinter.CTkFont(size=16, weight="bold")
+        )
+        title_label.pack(pady=(20, 10), padx=20)
+        
+        # Message text
+        message_text = customtkinter.CTkTextbox(
+            dialog,
+            wrap="word",
+            height=250
+        )
+        message_text.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        message_text.insert("1.0", message)
+        message_text.configure(state="disabled")
+        
+        # Close button
+        close_button = customtkinter.CTkButton(
+            dialog,
+            text="Close",
+            command=dialog.destroy,
+            width=100
+        )
+        close_button.pack(pady=(0, 20))
+    
+    def _load_config(self):
+        """Load saved configuration and prefill fields."""
+        config = load_config()
+        
+        if 'folder_path' in config:
+            self.folder_path_var.set(config.get('folder_path', ''))
+        
+        if 'username' in config:
+            self.username_var.set(config.get('username', ''))
+        
+        # Note: PAT is NOT loaded from config (security requirement)
+        
+        if 'repo_name' in config:
+            self.repo_name_var.set(config.get('repo_name', ''))
+        
+        if 'visibility' in config:
+            self.visibility_var.set(config.get('visibility', 'private'))
+        
+        if 'description' in config:
+            self.description_var.set(config.get('description', ''))
+        
+        if 'commit_message' in config:
+            self.commit_message_var.set(config.get('commit_message', 'Initial commit: add all files and subfolders'))
+    
+    def _save_config(self):
+        """Save current field values to configuration file (excluding PAT)."""
+        config = {
+            'folder_path': self.folder_path_var.get().strip(),
+            'username': self.username_var.get().strip(),
+            # PAT is explicitly NOT saved (security requirement)
+            'repo_name': self.repo_name_var.get().strip(),
+            'visibility': self.visibility_var.get(),
+            'description': self.description_var.get().strip(),
+            'commit_message': self.commit_message_var.get().strip()
+        }
+        save_config(config)
+    
+    def _setup_config_autosave(self):
+        """Set up automatic config saving when values change."""
+        # Save config when variables change (with debouncing)
+        self._config_save_timer = None
+        
+        def schedule_save(*args):
+            """Schedule config save (debounced)."""
+            if self._config_save_timer:
+                self.after_cancel(self._config_save_timer)
+            self._config_save_timer = self.after(1000, self._save_config)  # Save after 1 second of no changes
+        
+        # Bind to variable changes (except PAT which is never saved)
+        self.folder_path_var.trace_add('write', schedule_save)
+        self.username_var.trace_add('write', schedule_save)
+        self.repo_name_var.trace_add('write', schedule_save)
+        self.visibility_var.trace_add('write', schedule_save)
+        self.description_var.trace_add('write', schedule_save)
+        self.commit_message_var.trace_add('write', schedule_save)
 

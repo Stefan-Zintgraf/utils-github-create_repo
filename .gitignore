@@ -56,3 +56,6 @@ github_token.txt
 test_tokens.txt
 test_tokens.json
 **/test_tokens.*
+
+# Application configuration (user preferences - must not be committed)
+app_config.json

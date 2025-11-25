@@ -208,30 +208,50 @@ GitHubRepoCreator/
    - Subtitle: "Migrate local folder to GitHub"
 
 2. **Source Folder Section**
-   - Label: "Source Folder Path"
+   - Label: "Source Folder Path" with help button (?)
    - Entry field: Text input for folder path
    - Browse button: Opens folder selection dialog
+   - Help button: Shows dialog with expected input format and examples
    - Validation indicator: Green checkmark or red X
 
 3. **GitHub Authentication Section**
    - Label: "GitHub Authentication"
-   - Username field: Text input
-   - Token/Password field: Password-masked input
+   - Username field: Text input with help button (?)
+   - Help button: Shows dialog with expected format and examples
+   - Token/Password field: Password-masked input with help button (?)
+   - Help button: Shows dialog with token format, examples, and creation instructions
    - Info label: "Use Personal Access Token (recommended)"
-   - Link: "How to create a token" (opens browser)
 
 4. **Repository Details Section**
-   - Label: "Repository Name"
-   - Entry field: Text input (alphanumeric, hyphens, underscores)
-   - Label: "Visibility"
-   - Radio buttons: "Private" (default) / "Public"
-   - Label: "Description" (optional)
-   - Text area: Multi-line description input
+   - Label: "Repository Details"
+   - Repository Name field: Text input with help button (?)
+   - Help button: Shows dialog with naming rules and examples
+   - Visibility: Radio buttons with help button (?)
+   - Help button: Shows dialog explaining Private vs Public
+   - Description field: Text input with help button (?)
+   - Help button: Shows dialog with examples and usage
 
 5. **Commit Message Section**
-   - Label: "Initial Commit Message"
+   - Label: "Initial Commit Message" with help button (?)
    - Entry field: Text input
+   - Help button: Shows dialog with examples and usage
    - Default value: "Initial commit: add all files and subfolders"
+
+**⚠️ UI REQUIREMENT - Help Elements:**
+- Each input field must have a help/info button (?) next to its label
+- Help buttons open a dialog showing:
+  - What input is expected
+  - Format requirements
+  - Examples of valid input
+  - Additional relevant information
+- Help dialogs should be modal and centered on the main window
+
+**⚠️ UI REQUIREMENT - Input Persistence:**
+- All user inputs (except PAT) must be saved to `app_config.json` (excluded from git)
+- On application startup, fields must be prefilled from saved configuration
+- Configuration must be saved automatically when values change (debounced)
+- Configuration must be saved when application exits
+- PAT (Personal Access Token) must NEVER be saved to configuration file
 
 6. **Progress Section**
    - Progress bar: Indeterminate or determinate based on operation
@@ -479,6 +499,8 @@ class ValidationService:
 class MainWindow(customtkinter.CTk):
     def __init__(self):
         # Initialize UI components
+        # Load saved configuration
+        # Set up auto-save for config
         
     def on_browse_clicked(self):
         # Handle folder browse button
@@ -486,6 +508,21 @@ class MainWindow(customtkinter.CTk):
     def on_create_clicked(self):
         # Handle create repository button
         # Run operations in background thread
+        
+    def _create_help_button(self, parent, title: str, message: str):
+        # Create help/info button next to input field
+        
+    def _show_help_dialog(self, title: str, message: str):
+        # Show modal help dialog with information
+        
+    def _load_config(self):
+        # Load saved configuration and prefill fields (excluding PAT)
+        
+    def _save_config(self):
+        # Save current field values to config file (excluding PAT)
+        
+    def _setup_config_autosave(self):
+        # Set up automatic config saving when values change
         
     def update_status(self, message: str, error: bool = False):
         # Update status log
@@ -498,8 +535,11 @@ class MainWindow(customtkinter.CTk):
 
 ### Authentication
 - **Token Storage:** 
-  - Option to save token in encrypted local storage
-  - Use Windows Credential Manager or encrypted config file
+  - **⚠️ CRITICAL:** Personal Access Tokens (PAT) must NEVER be saved to configuration files
+  - PAT must NOT be persisted to disk in any form
+  - Users must re-enter PAT each time the application starts
+  - Other user inputs (username, folder path, etc.) may be saved for convenience
+  - Configuration file (`app_config.json`) is excluded from git repository
   - Never log tokens in status messages
   
 ### Input Validation
