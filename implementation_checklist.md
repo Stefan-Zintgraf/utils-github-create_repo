@@ -44,6 +44,8 @@ python update_checklist.py <phase> <step>
 - Documentation updates
 
 **Storage Process:**
+
+**Automated Process (Preferred):**
 1. Complete the step implementation (automation agent, e.g., Codex, will orchestrate all required edits and script generation)
 2. Run the test script and verify success (automation agent runs each `test_step_X_Y.py`)
 3. Re-run every `test_step_X_Y.py` script introduced so far, including previous steps, to ensure no regressions are introduced; adjust older scripts as needed to reflect intentional interfaces and requirements
@@ -54,6 +56,16 @@ python update_checklist.py <phase> <step>
    - Commit: `git commit -m "Step X.Y: [Step description]"`
    - Push: `git push origin main`
 7. Verify the checkbox is checked in the progress summary below
+
+**Manual Process (if automation not available):**
+1. Complete step implementation
+2. Create test script `test_step_X_Y.py` (see `implementation_hints.md` for template)
+3. Run test script and verify success: `python test_step_X_Y.py`
+4. Check success log: `logs/step_X_Y_success.log`
+5. Copy all step-related files to subfolder `p{phase}_s{step}/` (e.g., `p3_s3.2/`)
+6. Maintain directory structure within the subfolder
+7. Update checklist: `python update_checklist.py {phase} {step}`
+8. Commit and push: `git add . && git commit -m "Step X.Y: [description]" && git push origin main`
 
 **Automation Note:** An automation agent (e.g., Codex) is responsible for running the entire workflow described above—test execution, regression checks, artifact archiving, checklist updates, and git pushes—without requiring any direct input from you unless a specific decision is needed (e.g., choosing between conflicting implementations). The agent should not stop mid-step or request confirmation unless a course of action cannot be determined automatically. Unless explicitly instructed to halt before a phase, the automation agent completes the full lifecycle for every step so nothing is left half-finished.
 
@@ -93,13 +105,6 @@ python update_checklist.py <phase> <step>
 - [x] Step 5.2: Create .gitignore File
 
 ---
-
-## Prerequisites
-
-- [ ] Python 3.9+ installed
-- [ ] Git installed and accessible via command line
-- [ ] GitHub account with Personal Access Token
-- [ ] Test folder structure for validation
 
 ## Phase 1: Project Setup
 
@@ -196,6 +201,8 @@ python update_checklist.py <phase> <step>
 **Functionality:**
 - Recursively scan all directories
 - Identify empty folders (containing no files, only subdirectories)
+- Note: Folders containing only `.gitkeep` files are considered empty
+- Hidden files (starting with `.`) are treated as regular files
 - Create `.gitkeep` file in each empty folder
 - Return count of files created
 

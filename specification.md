@@ -279,7 +279,7 @@ GitHubRepoCreator/
 #### 2. GitHub Authentication
 - **Token Authentication (Primary):**
   - Accept GitHub Personal Access Token
-  - Validate token format (starts with `ghp_` for classic tokens)
+  - Validate token format (starts with `ghp_` for classic tokens or `github_pat_` for fine-grained tokens)
   - Test token validity with API call
 - **Username/Password (Fallback):**
   - Support basic auth (less secure, not recommended)
@@ -309,7 +309,9 @@ GitHubRepoCreator/
   
 - **Handle Empty Folders:**
   - Before staging files, scan all directories recursively
-  - Identify all empty folders (folders containing no files)
+  - Identify all empty folders (folders containing no files, only subdirectories)
+  - Note: Folders containing only `.gitkeep` files are considered empty for this purpose
+  - Hidden files (starting with `.`) are treated as regular files
   - Create a `.gitkeep` file in each empty folder
   - This ensures empty folders are tracked in Git (Git doesn't track empty directories)
   - Log the number of `.gitkeep` files created

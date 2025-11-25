@@ -903,13 +903,37 @@ def test_background_threading():
         
         # Check if threading is used
         import inspect
-        source = inspect.getsource(window.on_create_clicked)
-        
-        if 'threading' not in source and 'Thread' not in source:
-            errors.append("on_create_clicked does not use threading")
+        try:
+            source = inspect.getsource(window.on_create_clicked)
+            
+            if 'threading' not in source and 'Thread' not in source:
+                errors.append("on_create_clicked does not use threading")
+            
+            # Additional check: verify threading module is imported
+            if hasattr(window, '__module__'):
+                try:
+                    import importlib
+                    module = importlib.import_module(window.__module__)
+                    if 'threading' not in dir(module) and 'Thread' not in dir(module):
+                        # Check if imported via from statement
+                        import ast
+                        with open(module.__file__, 'r') as f:
+                            tree = ast.parse(f.read())
+                            has_threading_import = any(
+                                isinstance(node, (ast.Import, ast.ImportFrom)) and 
+                                ('threading' in str(node) or 'Thread' in str(node))
+                                for node in ast.walk(tree)
+                            )
+                        if not has_threading_import:
+                            errors.append("Threading module not imported in main_window.py")
+                except Exception:
+                    pass  # Skip if module inspection fails
+        except OSError:
+            errors.append("Could not inspect on_create_clicked source code")
         
         # Test that UI remains responsive (simplified test)
-        # In real scenario, would test actual responsiveness
+        # In real scenario, would test actual responsiveness with mocks
+        # This test verifies structure; manual testing required for full validation
         
         root.destroy()
         

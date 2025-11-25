@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 
 VALID_REPO_NAME = re.compile(r"^(?=.{1,100}$)[A-Za-z0-9._-]+$")
-VALID_TOKEN_PREFIXES = ("ghp_", "gho_", "ghu_", "ghr_", "ghs_", "ghk_")
+VALID_TOKEN_PREFIXES = ("ghp_", "gho_", "ghu_", "ghr_", "ghs_", "ghk_", "github_pat_")
 
 
 class ValidationService:
@@ -55,6 +55,6 @@ class ValidationService:
         if len(token) < 40:
             return False, "Token appears too short."
         if not token.startswith(VALID_TOKEN_PREFIXES):
-            return False, "Token must start with a valid GitHub token prefix (e.g., ghp_)."
+            return False, "Token must start with a valid GitHub token prefix (e.g., ghp_ for classic tokens or github_pat_ for fine-grained tokens)."
 
         return True, "Token format looks valid."
