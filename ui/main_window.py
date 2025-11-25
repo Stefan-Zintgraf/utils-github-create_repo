@@ -28,7 +28,8 @@ class MainWindow(customtkinter.CTk):
         
         # Window configuration
         self.title("GitHub Repository Creator")
-        self.geometry("800x700")
+        self.geometry("800x600")
+        self.minsize(600, 400)  # Minimum window size
         self.resizable(True, True)
         
         # Variables
@@ -65,9 +66,13 @@ class MainWindow(customtkinter.CTk):
     
     def _create_widgets(self):
         """Create all UI widgets."""
-        # Main container with padding
-        main_frame = customtkinter.CTkFrame(self)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        # Create scrollable frame for main content
+        scrollable_frame = customtkinter.CTkScrollableFrame(self)
+        scrollable_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Main container with padding (inside scrollable frame)
+        main_frame = customtkinter.CTkFrame(scrollable_frame)
+        main_frame.pack(fill="both", expand=True)
         
         # Header Section
         header_label = customtkinter.CTkLabel(

@@ -194,9 +194,12 @@ GitHubRepoCreator/
 
 #### Window Properties
 - **Title:** "GitHub Repository Creator"
-- **Size:** 800x700 pixels (resizable)
+- **Size:** 800x600 pixels (resizable, minimum 600x400)
 - **Theme:** CustomTkinter dark/light mode (system preference)
 - **Icon:** GitHub icon (if available)
+- **Scrollable Content:** Main content area must be scrollable to accommodate all UI elements on smaller screens
+- **Scrollbar:** Vertical scrollbar must be visible when content exceeds window height
+- **Responsive:** Window should adapt to different screen sizes and DPI settings
 
 #### UI Components (Top to Bottom)
 
@@ -234,6 +237,13 @@ GitHubRepoCreator/
    - Progress bar: Indeterminate or determinate based on operation
    - Status text area: Scrollable log of operations
    - Auto-scroll: Automatically scrolls to latest message
+
+**⚠️ CRITICAL UI REQUIREMENT:**
+- The main content area must be wrapped in a scrollable frame (CTkScrollableFrame)
+- All input fields, buttons, and controls must be accessible via scrolling
+- Window must work on screens as small as 600x400 pixels
+- Scrollbars must appear automatically when content exceeds visible area
+- All UI elements must remain functional when scrolled
 
 7. **Action Buttons Section**
    - "Create Repository & Push" button: Primary action (large, prominent)
@@ -287,6 +297,11 @@ GitHubRepoCreator/
 - **Token Storage:** 
   - Option to save token locally (encrypted)
   - Never store passwords
+- **⚠️ CRITICAL SECURITY REQUIREMENT:**
+  - **No tokens (real or fake) shall be stored in any file that is committed to the repository**
+  - Test files must NOT contain token strings, even fake ones (GitGuardian and similar scanners will flag them)
+  - Fake test tokens must be stored in `test_tokens.json` or similar file that is excluded via `.gitignore`
+  - Test scripts should load fake tokens from external files that are not part of the repository
 
 #### 3. Repository Creation
 - **API Call:** Create repository via GitHub API
@@ -571,6 +586,8 @@ After completing any step, an automation agent (e.g., Codex) executes **that ste
 
 ### Step Completion Process
 
+**⚠️ MANDATORY WORKFLOW - All steps must be completed in order:**
+
 After each implementation step is completed:
 
 1. **Complete Implementation:**
@@ -580,12 +597,14 @@ After each implementation step is completed:
 2. **Store Step Files:**
    - Copy all step-related files to subfolder `step_archive/p{phase}_s{step}/` (e.g., `step_archive/p1_s1.1/`)
    - Maintain directory structure within the subfolder
+   - Store test script in `test_steps/test_step_X_Y.py`
 
-3. **Update Git Repository:**
+3. **⚠️ MANDATORY: Update Git Repository (DO NOT SKIP):**
    - Add all modified/new project files to git: `git add .`
    - **Important:** Step archive folder (`step_archive/`) and test steps folder (`test_steps/`) are automatically excluded via `.gitignore` and must never be committed
    - Commit with descriptive message: `git commit -m "Step X.Y: [Step description]"`
    - Push to remote: `git push origin main`
+   - **CRITICAL:** This step is MANDATORY and must be completed before proceeding to the next step. Automation agents must NOT skip this step.
 
 4. **Update Checklist:**
    - Checkboxes are automatically updated by test scripts
@@ -593,9 +612,10 @@ After each implementation step is completed:
 ### Git Repository Rules
 
 - **Step archive and test folders excluded:** The `step_archive/` and `test_steps/` folders are in `.gitignore` and must never be added to the repository
-- **Automatic commits:** Each completed step should result in a git commit and push
+- **⚠️ MANDATORY: Automatic commits:** Each completed step MUST result in a git commit and push. This is not optional.
 - **Commit messages:** Use format "Step X.Y: [description]" for clarity
 - **Repository sync:** Keep the remote repository up-to-date after each step
+- **Automation requirement:** Automation agents must execute the git commit/push workflow after every step completion. This step cannot be deferred or skipped.
 
 ## Development Phases
 

@@ -405,8 +405,18 @@ def test_validation_service():
             errors.append(f"validate_repository_name should fail for invalid name '{name}'")
     
     # Test validate_token
-    # Valid token format
-    result, msg = validate_token('ghp_1234567890abcdef')
+    # ⚠️ SECURITY REQUIREMENT: Never store tokens (even fake ones) in test files that are committed.
+    # Load fake test tokens from test_tokens.json (which is in .gitignore and never committed)
+    import json
+    try:
+        with open('test_tokens.json', 'r') as f:
+            test_tokens = json.load(f)
+        fake_token = test_tokens['fake_classic_token']
+    except FileNotFoundError:
+        # Fallback: generate a fake token dynamically (clearly fake, not stored in source)
+        fake_token = 'ghp_' + 'TEST' * 9  # 40 chars: ghp_ + 36 chars of "TEST" repeated
+    
+    result, msg = validate_token(fake_token)
     if not result:
         errors.append(f"validate_token failed for valid format: {msg}")
     

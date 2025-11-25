@@ -25,9 +25,15 @@ python update_checklist.py <phase> <step>
 
 **Note:** Test scripts automatically call this update function, so manual updates should rarely be needed.
 
-## Important: Step Completion Storage
+## ⚠️ CRITICAL: Step Completion Requirements
 
-**After successfully implementing and testing each step, all files, folders, and related artifacts must be stored in a subfolder within `step_archive/` named with the pattern `p{phase}_s{step}`.**
+**Every step completion MUST include these three mandatory actions:**
+
+1. **Archive Files:** Store all files, folders, and related artifacts in a subfolder within `step_archive/` named with the pattern `p{phase}_s{step}`
+2. **Create Test Script:** Create and store test script in `test_steps/test_step_X_Y.py`
+3. **⚠️ MANDATORY GIT COMMIT/PUSH:** Execute `git add . && git commit -m "Step X.Y: [description]" && git push origin main`
+
+**The git commit/push step (step 3) is MANDATORY and must NOT be skipped. Automation agents must complete this before proceeding to the next step.**
 
 **Every checklist step must also include the creation of a runnable `test_step_X_Y.py` script that verifies that step's functionality, exercises `update_checklist.py`, and confirms the step's checkbox when executed. Writing that script is part of the step's implementation work. All test scripts must be stored in the `test_steps/` subfolder.**
 
@@ -52,10 +58,11 @@ python update_checklist.py <phase> <step>
 4. Re-run every `test_steps/test_step_X_Y.py` script introduced so far, including previous steps, to ensure no regressions are introduced; adjust older scripts as needed to reflect intentional interfaces and requirements
 5. Copy all step-related files to the appropriate subfolder (e.g., `step_archive/p3_s3.2/`) and gather logs (automation agent automates this archival)
 6. Checkboxes are automatically updated by test scripts (see `update_checklist.py`)
-7. **Update and push to git repository:** (automation agent executes `git add`, commit, and push once validation passes)
+7. **⚠️ CRITICAL: Update and push to git repository (MANDATORY - DO NOT SKIP):** (automation agent MUST execute `git add`, commit, and push once validation passes)
    - Add files: `git add .` (step archive folder `step_archive/` and test steps folder `test_steps/` are automatically excluded via `.gitignore`)
    - Commit: `git commit -m "Step X.Y: [Step description]"`
    - Push: `git push origin main`
+   - **Note:** This step is MANDATORY and must be completed before moving to the next step. The automation agent must NOT proceed to the next step without completing this git workflow.
 8. Verify the checkbox is checked in the progress summary below
 
 **Manual Process (if automation not available):**
@@ -68,7 +75,9 @@ python update_checklist.py <phase> <step>
 7. Update checklist: `python update_checklist.py {phase} {step}`
 8. Commit and push: `git add . && git commit -m "Step X.Y: [description]" && git push origin main`
 
-**Automation Note:** An automation agent (e.g., Codex) is responsible for running the entire workflow described above—test execution, regression checks, artifact archiving, checklist updates, and git pushes—without requiring any direct input from you unless a specific decision is needed (e.g., choosing between conflicting implementations). The agent should not stop mid-step or request confirmation unless a course of action cannot be determined automatically. Unless explicitly instructed to halt before a phase, the automation agent completes the full lifecycle for every step so nothing is left half-finished.
+**Automation Note:** An automation agent (e.g., Codex) is responsible for running the entire workflow described above—test execution, regression checks, artifact archiving, checklist updates, and **MANDATORY git commits/pushes**—without requiring any direct input from you unless a specific decision is needed (e.g., choosing between conflicting implementations). The agent should not stop mid-step or request confirmation unless a course of action cannot be determined automatically. Unless explicitly instructed to halt before a phase, the automation agent completes the full lifecycle for every step so nothing is left half-finished.
+
+**⚠️ CRITICAL REMINDER FOR AUTOMATION AGENTS:** Step 7 (git commit and push) is MANDATORY and must be executed after every step. The automation agent must NOT skip this step or proceed to the next step without completing the git workflow. Each step must result in a separate git commit with the format: `git commit -m "Step X.Y: [Step description]"` followed by `git push origin main`.
 
 **Important:** The `step_archive/` and `test_steps/` folders are in `.gitignore` and must never be committed to the repository. They are for local step storage and testing only.
 
@@ -123,7 +132,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_1_1.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `step_archive/p1_s1.1/` subfolder after successful testing. Store test script in `test_steps/test_step_1_1.py`.
+**After Completion:** 
+1. Store all files in `step_archive/p1_s1.1/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_1_1.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 1.1: Create Project Structure" && git push origin main`
 
 ---
 
@@ -135,7 +147,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_1_2.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p1_s1.2/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p1_s1.2/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_1_2.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 1.2: Create Requirements File" && git push origin main`
 
 ---
 
@@ -148,7 +163,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_1_3.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p1_s1.3/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p1_s1.3/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_1_3.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 1.3: Create Logging Directory and Utility" && git push origin main`
 
 ---
 
@@ -167,7 +185,15 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_2_1.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p2_s2.1/` subfolder after successful testing.
+**⚠️ SECURITY REQUIREMENT:** 
+- Test files must NOT contain token strings (real or fake) in the source code
+- Fake test tokens must be loaded from `test_tokens.json` (which is in `.gitignore`)
+- This prevents GitGuardian and similar security scanners from flagging committed files
+
+**After Completion:** 
+1. Store all files in `step_archive/p2_s2.1/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_2_1.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 2.1: Create Validation Service" && git push origin main`
 
 ---
 
@@ -189,7 +215,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_2_2.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p2_s2.2/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p2_s2.2/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_2_2.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 2.2: Create Git Service - Basic Structure" && git push origin main`
 
 ---
 
@@ -209,7 +238,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_2_3.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p2_s2.3/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p2_s2.3/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_2_3.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 2.3: Implement create_gitkeep_files Method" && git push origin main`
 
 ---
 
@@ -229,7 +261,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_2_4.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p2_s2.4/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p2_s2.4/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_2_4.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 2.4: Implement Git Operations Methods" && git push origin main`
 
 ---
 
@@ -247,7 +282,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_2_5.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p2_s2.5/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p2_s2.5/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_2_5.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 2.5: Create GitHub Service" && git push origin main`
 
 ---
 
@@ -260,15 +298,22 @@ python update_checklist.py <phase> <step>
 - `ui/main_window.py`
 
 **Required Components:**
-- Window initialization
+- Window initialization with minimum size (600x400) and default size (800x600)
+- **Scrollable content area** using CTkScrollableFrame to ensure all elements are accessible
 - All input fields (folder path, username, token, repo name, etc.)
 - All buttons (browse, create, clear, exit)
 - Progress bar
 - Status text area
+- **Scrollbars must appear automatically when content exceeds window height**
+
+**⚠️ UI REQUIREMENT:** The window must be scrollable to work on smaller screens. All UI elements must be accessible via scrolling.
 
 **Test:** Create and run `test_steps/test_step_3_1.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p3_s3.1/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p3_s3.1/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_3_1.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 3.1: Create Main Window Structure" && git push origin main`
 
 ---
 
@@ -287,7 +332,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_3_2.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p3_s3.2/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p3_s3.2/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_3_2.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 3.2: Implement UI Event Handlers" && git push origin main`
 
 ---
 
@@ -304,7 +352,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_3_3.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p3_s3.3/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p3_s3.3/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_3_3.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 3.3: Implement Background Threading" && git push origin main`
 
 ---
 
@@ -323,7 +374,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_4_1.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p4_s4.1/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p4_s4.1/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_4_1.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 4.1: Create Main Entry Point" && git push origin main`
 
 ---
 
@@ -342,7 +396,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_4_2.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p4_s4.2/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p4_s4.2/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_4_2.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 4.2: End-to-End Integration Test" && git push origin main`
 
 ---
 
@@ -363,7 +420,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_5_1.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p5_s5.1/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p5_s5.1/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_5_1.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 5.1: Implement Comprehensive Error Handling" && git push origin main`
 
 ---
 
@@ -382,7 +442,10 @@ python update_checklist.py <phase> <step>
 
 **Test:** Create and run `test_steps/test_step_5_2.py` - See `implementation_hints.md` for test script template
 
-**After Completion:** Store all files in `p5_s5.2/` subfolder after successful testing.
+**After Completion:** 
+1. Store all files in `step_archive/p5_s5.2/` subfolder after successful testing
+2. Store test script in `test_steps/test_step_5_2.py`
+3. **⚠️ MANDATORY:** Commit and push to git: `git add . && git commit -m "Step 5.2: Create .gitignore File" && git push origin main`
 
 ---
 
